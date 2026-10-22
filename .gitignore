@@ -1,0 +1,15 @@
+node_modules
+dist
+*.local
+.env
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+# local dev data
+/data
+*.tsbuildinfo
+# Gradle / Android
+.gradle
+build
+local.properties
+.idea

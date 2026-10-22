@@ -1,0 +1,17 @@
+{
+  "name": "bonfire",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Self-hosted ROM library and save sync server with Android and Windows clients.",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace server",
+    "dev:web": "npm run dev --workspace web",
+    "build": "npm run build --workspace web && npm run build --workspace server",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm test --workspace server"
+  }
+}
