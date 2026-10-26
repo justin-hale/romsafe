@@ -188,10 +188,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      # By name: the Docker build also stores a build-record artifact that isn't a release file.
       - uses: actions/download-artifact@v4
         with:
+          name: apk
           path: dist
-          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: msi
+          path: dist
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
