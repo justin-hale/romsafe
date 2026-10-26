@@ -15,6 +15,7 @@ import { authRoutes } from './routes/auth.js';
 import { deviceRoutes } from './routes/device.js';
 import { uploadRoutes } from './routes/uploads.js';
 import { SyncError, SyncService } from './saves/sync.js';
+import { versionInfo } from './version.js';
 
 export interface Services {
   ctx: AppContext;
@@ -53,7 +54,8 @@ export async function buildApp(config: Config, opts: { logger?: boolean } = {}):
     return reply.code(status).send({ error: status >= 500 ? 'Internal server error' : (err as Error).message });
   });
 
-  app.get('/api/health', async () => ({ ok: true, name: 'romsafe', version: '0.1.0' }));
+  // Public, so an app can tell whether it can talk to this server before pairing.
+  app.get('/api/health', async () => ({ ok: true, name: 'romsafe', ...versionInfo() }));
   await app.register(authRoutes(services), { prefix: '/api/auth' });
   await app.register(adminRoutes(services), { prefix: '/api' });
   await app.register(uploadRoutes(services), { prefix: '/api' });

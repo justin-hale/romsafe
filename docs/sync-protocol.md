@@ -1,8 +1,42 @@
-# Device sync protocol (v1)
+# Device sync protocol (protocol 1)
 
 JSON over HTTPS. Every endpoint except `/pair` needs `Authorization: Bearer <device token>`.
 All save and ROM paths are **relative to the folder the user picked for that platform**, use `/`
 separators, and may not contain `..`.
+
+## Versions
+
+A release has one version, the root `package.json`'s, shared by the server and both apps. Two
+more numbers decide whether an app and a server can work together:
+
+- `protocol`: the device API generation the server speaks, an integer (currently `1`). It goes up
+  only when a change would break apps built for the previous one. Each app knows the protocol it
+  needs and refuses an older server.
+- `minClientVersion`: the oldest app release the server still works with.
+
+```http
+GET /api/health                     (no auth)
+→ { "ok": true, "name": "romsafe", "version": "0.1.0", "protocol": 1, "minClientVersion": "0.1.0" }
+```
+
+`GET /api/device/config` carries the same three as `server: { version, protocol, minClientVersion }`.
+
+Apps send their version on every request, as `X-RomSafe-Client-Version: 0.1.0`. When it is older
+than `minClientVersion`, every `/api/device/*` endpoint (pairing included, so the code isn't used
+up) answers `426 Upgrade Required` with `{ error, version, protocol, minClientVersion }`; `error`
+is a sentence to show as is. Apps that don't send the header, or send something that isn't
+`major.minor.patch`, are let through.
+
+The apps check before pairing (`/api/health`) and on every config fetch:
+
+| Situation | The app shows |
+| --- | --- |
+| No `protocol` (a server from before this handshake), or `protocol` lower than the app needs | "Update the server" |
+| App version lower than `minClientVersion`, or a `426` | "Update the app", with a link to the latest release |
+
+Versions compare as `major.minor.patch`, ignoring `-prerelease` and `+build` suffixes. When a
+release changes the device API incompatibly: bump `PROTOCOL` and `MIN_CLIENT_VERSION` in
+`server/src/version.ts` and `Compatibility.PROTOCOL` in `clients/shared`, together.
 
 ## Pairing
 

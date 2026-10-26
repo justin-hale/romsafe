@@ -7,6 +7,7 @@ import { profileSupports } from '../profiles/profiles.js';
 import { isSafeRelative, normalizePath } from '../profiles/template.js';
 import { updateInventory, type InventoryFile } from '../roms/matching.js';
 import type { LocalSave } from '../saves/sync.js';
+import { CLIENT_VERSION_HEADER, clientTooOld, versionInfo } from '../version.js';
 
 interface MappingBody {
   platform: string;
@@ -23,6 +24,13 @@ export const deviceRoutes =
   async (app) => {
     const db = ctx.db;
 
+    // Turn away apps older than the server supports with a message the app can
+    // show as is, rather than letting them fail on a changed endpoint later.
+    app.addHook('onRequest', async (req, reply) => {
+      const tooOld = clientTooOld(req.headers[CLIENT_VERSION_HEADER] as string | undefined);
+      if (tooOld) return reply.code(426).send({ error: tooOld, ...versionInfo() });
+    });
+
     app.post<{ Body: { code: string; name: string; kind: string } }>('/pair', async (req, reply) => {
       const { code, name, kind } = req.body ?? ({} as { code?: string; name?: string; kind?: string });
       if (!code || !name?.trim()) return reply.code(400).send({ error: 'code and name are required' });
@@ -37,6 +45,7 @@ export const deviceRoutes =
       dev.get('/config', async (req) => {
         const deviceId = req.device!.id;
         return {
+          server: versionInfo(),
           device: req.device,
           platforms: ctx
             .platforms()
