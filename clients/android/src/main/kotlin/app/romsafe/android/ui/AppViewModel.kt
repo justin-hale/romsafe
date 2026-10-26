@@ -10,6 +10,7 @@ import app.romsafe.android.RomSafeApp
 import app.romsafe.shared.setup.EmulatorSetup
 import app.romsafe.android.data.Folders
 import app.romsafe.android.data.Lan
+import app.romsafe.android.data.LocalNetwork
 import app.romsafe.android.data.Pairing
 import app.romsafe.shared.setup.PlatformSetup
 import app.romsafe.android.sync.SyncRunner
@@ -290,6 +291,8 @@ class AppViewModel(private val app: RomSafeApp) : ViewModel() {
     private fun friendly(e: Exception): String = when (e) {
         is RomSafeApiException -> e.message ?: "Server error ${e.status}"
         is UnknownHostException -> "Can't find that server. Check the address."
+        // Android 17 blocks the home network without the permission; the connection just fails.
+        is java.io.IOException if LocalNetwork.needsGrant(app) -> LocalNetwork.DENIED_MESSAGE
         is ConnectException, is SocketTimeoutException ->
             "Couldn't reach the server. Is it running, and is this device on the same network?"
         is java.io.IOException -> "Couldn't reach the server (${e.message ?: e.javaClass.simpleName})."

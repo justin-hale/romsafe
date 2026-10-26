@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.romsafe.android.data.LocalNetwork
 import app.romsafe.android.sync.Downloads
 import app.romsafe.android.sync.SyncRunner
 import app.romsafe.android.ui.AppState
@@ -98,6 +99,14 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun Home(state: AppState, vm: AppViewModel) {
+    // Paired before Android 17 (or the permission was revoked): ask again, then retry.
+    val context = LocalContext.current
+    val localNetwork = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) vm.refresh()
+    }
+    LaunchedEffect(Unit) {
+        if (LocalNetwork.needsGrant(context)) localNetwork.launch(LocalNetwork.PERMISSION)
+    }
     val sync by SyncRunner.status.collectAsStateWithLifecycle()
     // Start on the library once something is set up; a fresh pairing starts on the folder setup.
     var tab by rememberSaveable { mutableStateOf(if (state.setups.isEmpty()) Tab.Platforms else Tab.Library) }

@@ -1,4 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.util.UUID
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
@@ -64,11 +67,59 @@ compose.desktop {
                 val (major, minor) = romsafeVersion.split('.').map { it.takeWhile(Char::isDigit).toInt() }
                 packageVersion = "${maxOf(major, 1)}.$minor.${commitCount.get()}"
                 iconFile.set(project.file("icons/romsafe.icns"))
+                infoPlist {
+                    // Shown in macOS's Local Network prompt; the server is nearly always on the LAN.
+                    extraKeysRawXml = """
+                        <key>NSLocalNetworkUsageDescription</key>
+                        <string>RomSafe connects to your RomSafe server on your network to sync saves and download games.</string>
+                    """.trimIndent()
+                }
             }
             linux {
                 packageVersion = romsafeVersion
                 iconFile.set(project.file("icons/romsafe.png"))
             }
         }
+    }
+}
+
+// jpackage copies one prebuilt launcher into every app, so every jpackage app's main executable
+// has the same Mach-O UUID. macOS's Local Network privacy identifies apps partly by that UUID,
+// and with a shared one (and only an ad hoc signature) it neither prompts nor allows: the app
+// silently can't reach a server on the LAN. Give the launcher a UUID of its own (one per build,
+// as Apple asks), then sign the bundle again, ad hoc, since the patch breaks the old signature.
+val launcherUuid = UUID.nameUUIDFromBytes("app.romsafe.desktop $romsafeVersion ${commitCount.get()}".toByteArray())
+val macApp = layout.buildDirectory.dir("compose/binaries/main/app/RomSafe.app")
+tasks.matching { it.name == "createDistributable" }.configureEach {
+    val onMac = System.getProperty("os.name").lowercase().contains("mac")
+    // Locals, so the action doesn't capture the script (the configuration cache can't store it).
+    val uuid = launcherUuid
+    val appDir = macApp
+    inputs.property("launcherUuid", uuid.toString())
+    doLast {
+        if (!onMac) return@doLast
+        val app = appDir.get().asFile
+        val launcher = app.resolve("Contents/MacOS/RomSafe")
+        val bytes = launcher.readBytes()
+        val buf = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
+        check(buf.getInt(0) == 0xfeedfacf.toInt()) { "$launcher isn't a thin 64-bit Mach-O" }
+        val commands = buf.getInt(16)
+        var offset = 32 // after mach_header_64
+        var patched = false
+        repeat(commands) {
+            val cmd = buf.getInt(offset)
+            if (cmd == 0x1b) { // LC_UUID: cmd, cmdsize, then the 16 UUID bytes
+                ByteBuffer.allocate(16).putLong(uuid.mostSignificantBits).putLong(uuid.leastSignificantBits).array()
+                    .copyInto(bytes, offset + 8)
+                patched = true
+            }
+            offset += buf.getInt(offset + 4)
+        }
+        check(patched) { "$launcher has no LC_UUID" }
+        launcher.writeBytes(bytes)
+        val sign = ProcessBuilder(
+            "codesign", "--force", "--sign", "-", "--preserve-metadata=identifier,entitlements,flags", app.path,
+        ).inheritIO().start()
+        check(sign.waitFor() == 0) { "codesign failed for $app" }
     }
 }

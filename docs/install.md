@@ -53,7 +53,9 @@ LAN, loopback and Tailscale addresses.
 1. Download `romsafe-<version>.apk` from the
    [latest release](https://github.com/justin-hale/romsafe/releases/latest) and open it. Android
    asks once to allow installs from your browser or file manager.
-2. Open RomSafe, enter the server address (e.g. `192.168.1.20:8080`) and the pairing code.
+2. Open RomSafe, enter the server address (e.g. `192.168.1.20:8080`) and the pairing code. On
+   Android 17 and later, allow **Nearby devices** when asked: Android needs it before an app may
+   reach anything on your home network, the server included.
 3. On **Sync**, add an emulator for each platform and pick its save folder (and, optionally, its
    ROM folder for downloads). The card warns when a folder doesn't look like that emulator's.
 
@@ -88,6 +90,10 @@ Download `RomSafe-<version>-macos-arm64.dmg` (Apple silicon) or `-macos-x64.dmg`
 RomSafe to Applications. The app isn't notarized yet, so macOS blocks the first launch: open
 **System Settings → Privacy & Security** and click **Open Anyway** next to the RomSafe message
 (or run `xattr -dr com.apple.quarantine /Applications/RomSafe.app` once).
+
+When you first pair, macOS asks to let RomSafe find devices on your local network: allow it, or
+it can't reach the server. (If you said no, turn RomSafe on in System Settings → Privacy &
+Security → Local Network.)
 
 RomSafe lives in the menu bar; closing the window keeps it syncing, and clicking its Dock icon
 brings the window back. To update, drag the newer version over the old one.

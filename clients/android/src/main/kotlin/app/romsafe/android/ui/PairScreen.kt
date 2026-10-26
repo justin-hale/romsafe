@@ -1,6 +1,8 @@
 package app.romsafe.android.ui
 
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import android.provider.Settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.romsafe.android.R
+import app.romsafe.android.data.LocalNetwork
 
 @Composable
 fun PairScreen(state: AppState, onPair: (url: String, code: String, name: String) -> Unit) {
@@ -54,8 +57,18 @@ fun PairScreen(state: AppState, onPair: (url: String, code: String, name: String
                 ?: "${Build.MANUFACTURER} ${Build.MODEL}",
         )
     }
+    var permissionError by rememberSaveable { mutableStateOf<String?>(null) }
     val canPair = url.isNotBlank() && code.isNotBlank() && name.isNotBlank() && !state.pairBusy
-    val submit = { if (canPair) onPair(url, code, name) }
+    // Ask for local network access first: without it the pairing request would only time out.
+    val localNetwork = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) onPair(url, code, name) else permissionError = LocalNetwork.DENIED_MESSAGE
+    }
+    val submit = {
+        if (canPair) {
+            permissionError = null
+            if (LocalNetwork.needsGrant(context)) localNetwork.launch(LocalNetwork.PERMISSION) else onPair(url, code, name)
+        }
+    }
 
     Box(
         Modifier.fillMaxSize().safeDrawingPadding().imePadding().verticalScroll(rememberScrollState()),
@@ -111,7 +124,7 @@ fun PairScreen(state: AppState, onPair: (url: String, code: String, name: String
                 keyboardActions = KeyboardActions(onDone = { submit() }),
                 modifier = Modifier.fillMaxWidth(),
             )
-            state.pairError?.let {
+            (permissionError ?: state.pairError)?.let {
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
             }
             Button(onClick = submit, enabled = canPair, modifier = Modifier.fillMaxWidth().height(48.dp)) {
