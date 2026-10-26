@@ -3,10 +3,14 @@ name: Release
 # Pushing a tag like v0.1.0 publishes that release: the server image on GHCR, the signed APK and
 # the Windows installer on GitHub Releases. The tag must match the root package.json version,
 # which is the one version for the server and both apps.
+#
+# Run it by hand from the Actions tab ("Run workflow") for a dry run: everything is built,
+# including the signed APK and the MSI as workflow artifacts, but nothing is pushed or released.
 
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -28,7 +32,7 @@ jobs:
       - id: v
         run: |
           version=$(node -p "require('./package.json').version")
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "v$version" != "$GITHUB_REF_NAME" ]; then
             echo "::error::Tag $GITHUB_REF_NAME doesn't match package.json version $version"
             exit 1
           fi
@@ -73,6 +77,7 @@ jobs:
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
+        if: github.ref_type == 'tag'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -91,7 +96,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ github.ref_type == 'tag' }}
           tags: ${{ steps.tags.outputs.tags }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
@@ -136,6 +141,11 @@ jobs:
           rm -f "$ROMSAFE_KEYSTORE_FILE"
           mkdir -p "$GITHUB_WORKSPACE/dist"
           cp android/build/outputs/apk/release/android-release.apk "$GITHUB_WORKSPACE/dist/romsafe-${{ needs.version.outputs.version }}.apk"
+      # Fails on an unsigned or broken APK; the fingerprint is the one to publish for verifying installs.
+      - name: Verify the signature
+        run: |
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$apksigner" verify --print-certs "$GITHUB_WORKSPACE"/dist/*.apk | tee /dev/stderr | grep -q "SHA-256 digest"
       - uses: actions/upload-artifact@v4
         with:
           name: apk
@@ -173,6 +183,7 @@ jobs:
 
   release:
     needs: [version, docker, android, windows]
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions:
       contents: write
