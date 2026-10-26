@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=RomSafe
+Comment=Save sync and ROM library client for a RomSafe server
+Exec=RomSafe
+Icon=romsafe
+Categories=Game;Utility;
+Terminal=false
+StartupWMClass=app-romsafe-desktop-MainKt

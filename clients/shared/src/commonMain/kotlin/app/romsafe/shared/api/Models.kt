@@ -26,7 +26,12 @@ data class PlatformInfo(
 )
 
 @Serializable
-data class DefaultPaths(val android: List<String> = emptyList(), val windows: List<String> = emptyList())
+data class DefaultPaths(
+    val android: List<String> = emptyList(),
+    val windows: List<String> = emptyList(),
+    val macos: List<String> = emptyList(),
+    val linux: List<String> = emptyList(),
+)
 
 @Serializable
 data class SaveRule(

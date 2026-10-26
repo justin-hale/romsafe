@@ -25,6 +25,7 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberTrayState
 import androidx.compose.ui.window.rememberWindowState
 import app.romsafe.desktop.data.DesktopStore
+import app.romsafe.desktop.data.Os
 import app.romsafe.desktop.ui.Home
 import app.romsafe.desktop.ui.ImageLoaderSetup
 import app.romsafe.desktop.ui.PairScreen
@@ -34,17 +35,23 @@ import app.romsafe.desktop.ui.UpdateScreen
 import app.romsafe.desktop.ui.logoPainter
 import app.romsafe.desktop.ui.syncLine
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.awt.Desktop
+import java.awt.SystemTray
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     // A second launch (the Start menu while it sits in the tray) brings the first one forward.
     val show = MutableStateFlow(0)
     val instance = SingleInstance.acquire { show.value++ } ?: exitProcess(0)
+    // Some Linux desktops (GNOME without an extension, Steam Deck's Game Mode) have no tray.
+    // There, closing the window quits, since nothing could bring it back.
+    val hasTray = SystemTray.isSupported()
     // `--hidden` starts in the tray, for launching at sign-in.
-    val startHidden = "--hidden" in args
+    val startHidden = "--hidden" in args && hasTray
 
     val store = DesktopStore()
     val app = AppModel(store)
+    if (Os.current == Os.MacOs) macOsAppEvents(show, onQuit = { app.close(); instance.close() })
 
     application {
         var visible by remember { mutableStateOf(!startHidden) }
@@ -79,13 +86,21 @@ fun main(args: Array<String>) {
             if (!visible && paired && !store.trayHintShown) {
                 store.trayHintShown = true
                 tray.sendNotification(
-                    Notification("RomSafe is still running", "Saves keep syncing in the background. Quit from the tray icon.", Notification.Type.Info),
+                    Notification("RomSafe is still running", "Saves keep syncing in the background. Quit from the $trayName icon.", Notification.Type.Info),
                 )
             }
         }
 
         Window(
-            onCloseRequest = { visible = false },
+            onCloseRequest = {
+                if (hasTray) {
+                    visible = false
+                } else {
+                    app.close()
+                    instance.close()
+                    exitApplication()
+                }
+            },
             visible = visible,
             title = "RomSafe",
             icon = logoPainter(),
@@ -121,6 +136,26 @@ fun main(args: Array<String>) {
                     }
                 }
             }
+        }
+    }
+}
+
+private val trayName = if (Os.current == Os.MacOs) "menu bar" else "tray"
+
+/**
+ * The window is only hidden on close, so the Dock icon stays; clicking it should bring the window
+ * back, and Quit in the app menu should stop syncing as cleanly as the tray's Quit does.
+ */
+private fun macOsAppEvents(show: MutableStateFlow<Int>, onQuit: () -> Unit) {
+    if (!Desktop.isDesktopSupported()) return
+    val desktop = Desktop.getDesktop()
+    if (desktop.isSupported(Desktop.Action.APP_EVENT_REOPENED)) {
+        desktop.addAppEventListener(java.awt.desktop.AppReopenedListener { show.value++ })
+    }
+    if (desktop.isSupported(Desktop.Action.APP_QUIT_HANDLER)) {
+        desktop.setQuitHandler { _, response ->
+            onQuit()
+            response.performQuit()
         }
     }
 }

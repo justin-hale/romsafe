@@ -11,6 +11,8 @@ description: Pick the "sdmc" folder, the one that contains "Nintendo 3DS".
 defaultPaths:                    # hints shown by the apps
   android: ["azahar-emu/sdmc"]
   windows: ["%APPDATA%\\Azahar\\sdmc"]
+  macos: ["~/Library/Application Support/Azahar/sdmc"]
+  linux: ["~/.local/share/azahar-emu/sdmc", "~/.var/app/org.azahar_emu.Azahar/data/azahar-emu/sdmc"]
 saves:
   - platforms: ["3ds"]
     pattern: "Nintendo 3DS/{id0}/{id1}/title/{category:8}/{titleLow:8}/data/{file**}"

@@ -10,6 +10,7 @@ import kotlinx.serialization.Serializable
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import java.nio.file.attribute.PosixFilePermissions
 
 data class Pairing(val serverUrl: String, val deviceId: Long, val deviceName: String, val token: String)
 
@@ -50,6 +51,8 @@ class DesktopStore(private val dir: Path = AppDirs.data) : LibraryPrefs {
         Files.createDirectories(dir)
         val temp = dir.resolve("settings.json.tmp")
         Files.writeString(temp, json.encodeToString(settings))
+        // Outside Windows the device token is stored as is, so only this user may read the file.
+        if (Os.current != Os.Windows) Files.setPosixFilePermissions(temp, PosixFilePermissions.fromString("rw-------"))
         Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
     }
 

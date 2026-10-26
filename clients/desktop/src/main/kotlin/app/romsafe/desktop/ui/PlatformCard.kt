@@ -183,7 +183,7 @@ private fun EmulatorSection(
     onRemove: () -> Unit,
 ) {
     val profile = profiles[emulator.profile]
-    val hints = profile?.defaultPaths?.windows.orEmpty()
+    val hints = profile?.defaultPaths?.let(Folders::hintsForThisOs).orEmpty()
     // The profile's usual folders that exist here and no other emulator on this platform uses yet.
     val found = remember(hints, usedPaths) {
         Folders.existingDefaults(hints).map { it.toString() }.filter { it !in usedPaths }

@@ -20,7 +20,7 @@ export default function Devices() {
       />
       <ErrorNote error={devices.error} />
       {devices.data?.length === 0 && (
-        <Card className="p-6 text-sm text-stone-400">No devices yet. Install the RomSafe app on Android or Windows and pair it with a code.</Card>
+        <Card className="p-6 text-sm text-stone-400">No devices yet. Install the RomSafe app on Android, Windows, macOS or Linux and pair it with a code.</Card>
       )}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {devices.data?.map((d) => (

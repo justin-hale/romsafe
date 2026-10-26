@@ -6,12 +6,12 @@ import java.util.Base64
 /**
  * Keeps the device token out of plain sight in settings.json. On Windows it
  * is sealed with DPAPI (only this Windows user can open it); elsewhere the
- * file sits in the user's own config folder and the token is stored as is.
+ * token is stored as is in a settings file only this user can read.
  */
 object TokenCipher {
     private const val DPAPI = "dpapi:"
     private const val PLAIN = "plain:"
-    private val windows = System.getProperty("os.name").startsWith("Windows", ignoreCase = true)
+    private val windows = Os.current == Os.Windows
 
     fun encrypt(token: String): String =
         if (windows) {

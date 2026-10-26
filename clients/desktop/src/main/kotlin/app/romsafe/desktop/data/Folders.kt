@@ -1,5 +1,6 @@
 package app.romsafe.desktop.data
 
+import app.romsafe.shared.api.DefaultPaths
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -8,15 +9,13 @@ import kotlin.io.path.name
 
 /** Where the app keeps its settings and hash cache. */
 object AppDirs {
-    private val os = System.getProperty("os.name").lowercase()
-
     val data: Path by lazy {
         val home = Paths.get(System.getProperty("user.home"))
-        when {
+        when (Os.current) {
             // Local, not roaming: the hash cache and folder paths belong to this machine.
-            os.startsWith("windows") -> Paths.get(System.getenv("LOCALAPPDATA") ?: home.resolve("AppData/Local").toString(), "RomSafe")
-            os.contains("mac") -> home.resolve("Library/Application Support/RomSafe")
-            else -> Paths.get(System.getenv("XDG_CONFIG_HOME") ?: home.resolve(".config").toString(), "romsafe")
+            Os.Windows -> Paths.get(System.getenv("LOCALAPPDATA") ?: home.resolve("AppData/Local").toString(), "RomSafe")
+            Os.MacOs -> home.resolve("Library/Application Support/RomSafe")
+            Os.Linux -> Paths.get(System.getenv("XDG_CONFIG_HOME") ?: home.resolve(".config").toString(), "romsafe")
         }
     }
 }
@@ -37,6 +36,13 @@ object Folders {
         if (unknown) return null
         if (text.startsWith("~")) text = System.getProperty("user.home") + text.substring(1)
         return runCatching { Paths.get(text) }.getOrNull()
+    }
+
+    /** The profile's hints for the OS this runs on. */
+    fun hintsForThisOs(paths: DefaultPaths): List<String> = when (Os.current) {
+        Os.Windows -> paths.windows
+        Os.MacOs -> paths.macos
+        Os.Linux -> paths.linux
     }
 
     /** The profile's usual folders that exist on this machine, in the profile's order. */

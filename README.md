@@ -44,7 +44,7 @@ library and metadata, plus Syncthing-style sync that understands emulators:
 | Docker image | ✅ |
 | Android app | ✅ pairing, per-emulator save folders, background sync, library, ROM downloads |
 | Windows app | ✅ the same engine as a tray app that syncs when save folders change |
-| macOS and Linux apps | 🛠 the desktop app builds there, but isn't packaged yet |
+| macOS and Linux apps | 🧪 the same desktop app as a DMG and an AppImage (Steam Deck included), less tested than Windows |
 
 ## Quick start
 

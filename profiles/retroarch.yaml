@@ -8,6 +8,8 @@ description: >
 defaultPaths:
   android: ["RetroArch/saves"]
   windows: ["%APPDATA%\\RetroArch\\saves", "C:\\RetroArch-Win64\\saves"]
+  macos: ["~/Library/Application Support/RetroArch/saves"]
+  linux: ["~/.config/retroarch/saves", "~/.var/app/org.libretro.RetroArch/config/retroarch/saves"]
 saves:
   - platforms: ["*"]
     pattern: "{game}.srm"

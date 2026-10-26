@@ -7,6 +7,8 @@ description: >
 defaultPaths:
   android: ["Flycast/data", "RetroArch/system/dc"]
   windows: ["%APPDATA%\\flycast\\data"]
+  macos: ["~/Library/Application Support/Flycast"]
+  linux: ["~/.local/share/flycast", "~/.var/app/org.flycast.Flycast/data/flycast"]
 saves:
   - platforms: ["dreamcast"]
     pattern: "vmu_save_{card}.bin"

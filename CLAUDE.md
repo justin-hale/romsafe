@@ -11,7 +11,7 @@ Android and Windows clients. Read `README.md` and `docs/` first; this file is th
 - `profiles/*.yaml`: emulator save layouts (`docs/emulator-profiles.md`).
 - `clients/`: one Gradle build (`clients/README.md`). `shared/` is the Kotlin Multiplatform engine
   (API client, sync, ROM downloads, library model); `android/` is the Compose app; `desktop/` is
-  the Compose Desktop tray app for Windows.
+  the Compose Desktop tray app for Windows, macOS and Linux.
 - `docs/sync-protocol.md`: the device API contract the clients implement.
 
 ## Commands
@@ -30,7 +30,7 @@ Clients (JDK 21 and the Android SDK; run from `clients/`):
 ```sh
 ./gradlew :shared:allTests :desktop:test   # engine and desktop tests
 ./gradlew :android:assembleDebug           # debug APK, installed with adb install -r
-./gradlew :desktop:run                     # :desktop:packageMsi builds the Windows installer
+./gradlew :desktop:run                     # packageMsi / packageDmg / packageAppImage on that OS
 ```
 
 Run `npm run typecheck && npm test` before every commit, and the client tests when `clients/`
@@ -41,7 +41,8 @@ changed.
 The root `package.json` version is the release version for the server and both apps (the
 clients' Gradle build reads it). To release: bump it (and the `server`/`web` workspace versions to
 match), commit, and push a `vX.Y.Z` tag. `.github/workflows/release.yml` then pushes the image to
-`ghcr.io/justin-hale/romsafe`, and attaches the signed APK and the Windows MSI to a GitHub release.
+`ghcr.io/justin-hale/romsafe`, and attaches the signed APK, the Windows MSI, the macOS DMGs (arm64
+and x64, not notarized) and the Linux AppImage to a GitHub release.
 It needs the `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and
 `ANDROID_KEY_PASSWORD` repository secrets. An incompatible device API change also bumps the
 protocol ("Versions" in `docs/sync-protocol.md`).
@@ -82,7 +83,8 @@ and the Windows app pair, sync saves, browse the library and download ROMs.
 2. A Proxmox community helper script, then platform templates (Unraid, TrueNAS and the like).
 3. Library management from the apps (restore versions, upload saves, covers), behind a per-device
    permission.
-4. macOS and Linux desktop packages.
+4. macOS and Linux desktop packages: the release workflow builds DMGs and an AppImage; they still
+   need testing on a Mac, a Steam Deck and a Linux desktop.
 5. More profiles and formats as real setups need them (see "Known gaps" in
    `docs/emulator-profiles.md`).
 

@@ -3,6 +3,7 @@ package app.romsafe.desktop
 import app.romsafe.desktop.data.DesktopStore
 import app.romsafe.desktop.data.Folders
 import app.romsafe.desktop.data.Lan
+import app.romsafe.desktop.data.Os
 import app.romsafe.desktop.data.Pairing
 import app.romsafe.desktop.sync.SyncService
 import app.romsafe.shared.api.DeviceConfig
@@ -276,13 +277,7 @@ class AppModel(private val store: DesktopStore = DesktopStore()) {
     }
 
     companion object {
-        /** What the server's Devices page shows; Windows is the main target. */
-        val DEVICE_KIND: String = System.getProperty("os.name").lowercase().let {
-            when {
-                it.startsWith("windows") -> "windows"
-                it.contains("mac") -> "macos"
-                else -> "linux"
-            }
-        }
+        /** What the server's Devices page shows. */
+        val DEVICE_KIND: String = Os.current.wire
     }
 }

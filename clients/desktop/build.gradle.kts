@@ -37,7 +37,9 @@ compose.desktop {
     application {
         mainClass = "app.romsafe.desktop.MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Msi, TargetFormat.Dmg, TargetFormat.Deb)
+            // AppImage here is jpackage's app folder; packaging/linux/build-appimage.sh wraps it into
+            // the single .AppImage file (a .deb wouldn't install on SteamOS's read-only system).
+            targetFormats(TargetFormat.Msi, TargetFormat.Dmg, TargetFormat.AppImage)
             packageName = "RomSafe"
             description = "Save sync and ROM library client for a RomSafe server"
             vendor = "RomSafe"
@@ -56,6 +58,16 @@ compose.desktop {
             }
             macOS {
                 bundleID = "app.romsafe.desktop"
+                appCategory = "public.app-category.utilities"
+                // macOS rejects a bundle version starting with 0, so 0.x releases are 1.x here
+                // (only Finder's Get Info shows it). Like the MSI, the last number is the commit count.
+                val (major, minor) = romsafeVersion.split('.').map { it.takeWhile(Char::isDigit).toInt() }
+                packageVersion = "${maxOf(major, 1)}.$minor.${commitCount.get()}"
+                iconFile.set(project.file("icons/romsafe.icns"))
+            }
+            linux {
+                packageVersion = romsafeVersion
+                iconFile.set(project.file("icons/romsafe.png"))
             }
         }
     }

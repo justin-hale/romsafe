@@ -7,7 +7,7 @@ logic is written once.
 clients/
   shared/        Kotlin Multiplatform: API client (Ktor), sync engine, ROM downloads, library model
   android/       Jetpack Compose app: SAF folder pickers, WorkManager background sync
-  desktop/       Compose Desktop app for Windows: tray icon, folder pickers, file watching
+  desktop/       Compose Desktop app for Windows, macOS and Linux: tray icon, folder pickers, file watching
 ```
 
 ## Shared engine
@@ -43,19 +43,26 @@ Known constraint: on Android 11+ the app cannot read `Android/data/<other app>`.
 can move their data to a user folder (Azahar, Dolphin, RetroArch, PPSSPP, DuckStation,
 NetherSX2). Shizuku support could cover the rest later.
 
-## Windows app
+## Desktop app (Windows, macOS, Linux)
 
-`desktop/` is the same app on Compose Desktop (it also builds on macOS and Linux, but only the
-Windows installer is packaged so far). Folders are plain paths: the setup card opens the chooser
-at the profile's `defaultPaths.windows` and offers any of those folders that exist. The library,
+`desktop/` is the same app on Compose Desktop. Folders are plain paths: the setup card opens the
+chooser at the profile's `defaultPaths` for this OS (`windows`, `macos` or `linux`) and offers any
+of those folders that exist. The library,
 game pages and sync engine come from `shared/`.
 
-- It lives in the tray (status, Sync now, Open, Quit); closing the window keeps it running, and
-  starting it again brings the window back. `--hidden` starts it in the tray.
+- It lives in the tray (the menu bar on macOS: status, Sync now, Open, Quit); closing the window
+  keeps it running, and starting it again (or clicking the Dock icon) brings the window back.
+  `--hidden` starts it in the tray. Where there is no tray (GNOME without an extension, the Steam
+  Deck's Game Mode), closing the window quits.
 - It syncs at start, every 15 minutes, and 8 seconds after a watched save folder changes
   (`WatchService`, limited to the folders a profile can keep saves in).
-- Settings, the hash cache and cached covers live in `%LOCALAPPDATA%\RomSafe`. The device token is
-  sealed with DPAPI, so only the same Windows user can read it.
+- Settings, the hash cache and cached covers live in `%LOCALAPPDATA%\RomSafe`,
+  `~/Library/Application Support/RomSafe` or `~/.config/romsafe`. On Windows the device token is
+  sealed with DPAPI, so only the same Windows user can read it; elsewhere `settings.json` is
+  readable only by its owner.
+- Packages: `:desktop:packageMsi` on Windows, `:desktop:packageDmg` on a Mac (the runtime is the
+  build machine's architecture), and on Linux `:desktop:packageAppImage` followed by
+  `desktop/packaging/linux/build-appimage.sh <version> <dir>` for the single `.AppImage` file.
 
 ## Versions
 
@@ -63,7 +70,8 @@ The apps take their version name from the root `package.json`, like the server, 
 has one version everywhere; `:shared:generateBuildInfo` puts it in `BuildInfo.VERSION`. The
 Android `versionCode` is the commit count, and the Windows installer is
 `<major>.<minor>.<commit count>` (Windows Installer only compares three numbers), so every build
-upgrades the one before.
+upgrades the one before. The macOS bundle version is the same, except that macOS refuses a
+leading 0, so 0.x releases are 1.x there. The AppImage carries the release version as is.
 
 ## Building
 
@@ -75,7 +83,7 @@ cd clients
 ./gradlew :shared:allTests            # engine tests (JVM and Android host)
 ./gradlew :android:assembleDebug      # android/build/outputs/apk/debug/android-debug.apk
 adb install -r android/build/outputs/apk/debug/android-debug.apk
-./gradlew :desktop:run                # the Windows app; :desktop:packageMsi builds an installer
+./gradlew :desktop:run                # the desktop app (packages: see above)
 ```
 
 ### Release signing

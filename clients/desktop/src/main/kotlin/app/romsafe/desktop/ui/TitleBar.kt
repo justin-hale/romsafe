@@ -1,5 +1,6 @@
 package app.romsafe.desktop.ui
 
+import app.romsafe.desktop.data.Os
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.platform.win32.WinDef
@@ -21,7 +22,7 @@ object TitleBar {
     private const val STONE_950 = 0x00090A0C
 
     fun darken(window: Window) {
-        if (!System.getProperty("os.name").startsWith("Windows", ignoreCase = true)) return
+        if (Os.current != Os.Windows) return
         runCatching {
             val dwm = Native.load("dwmapi", Dwmapi::class.java)
             val hwnd = WinDef.HWND(Pointer(Native.getWindowID(window)))

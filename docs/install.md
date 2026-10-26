@@ -81,8 +81,31 @@ yet, so SmartScreen may warn: **More info → Run anyway**.
 RomSafe lives in the tray: closing the window keeps it syncing. It syncs at start, every 15
 minutes, and a few seconds after a save changes. Installing a newer MSI upgrades in place.
 
-macOS and Linux packages aren't published yet; the desktop app runs there from source
-(`cd clients && ./gradlew :desktop:run`).
+## macOS
+
+Download `RomSafe-<version>-macos-arm64.dmg` (Apple silicon) or `-macos-x64.dmg` (Intel) from the
+[latest release](https://github.com/justin-hale/romsafe/releases/latest), open it and drag
+RomSafe to Applications. The app isn't notarized yet, so macOS blocks the first launch: open
+**System Settings → Privacy & Security** and click **Open Anyway** next to the RomSafe message
+(or run `xattr -dr com.apple.quarantine /Applications/RomSafe.app` once).
+
+RomSafe lives in the menu bar; closing the window keeps it syncing, and clicking its Dock icon
+brings the window back. To update, drag the newer version over the old one.
+
+## Linux and Steam Deck
+
+Download `RomSafe-<version>-x86_64.AppImage` from the
+[latest release](https://github.com/justin-hale/romsafe/releases/latest), make it executable
+(`chmod +x RomSafe-*.AppImage`, or Properties → Permissions → "Is executable") and run it. Nothing
+is installed; keep the file somewhere like `~/Applications`.
+
+On a Steam Deck, do this in Desktop Mode. Pick the emulators' folders as they are on the Deck:
+Flatpak emulators keep theirs under `~/.var/app/<app id>/`, and EmuDeck links them into
+`~/Emulation/saves`; the setup card offers the usual ones it finds. Game Mode has no tray, so
+RomSafe syncs while it runs in Desktop Mode (or as a non-Steam game you start before playing).
+
+On desktops with a tray (KDE, which the Deck's Desktop Mode uses; GNOME with the AppIndicator
+extension) closing the window keeps RomSafe syncing. Without a tray, closing the window quits.
 
 ## Server: plain Node.js (LXC, VM or bare metal)
 

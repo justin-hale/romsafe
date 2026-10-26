@@ -27,7 +27,7 @@ export interface Profile {
   name: string;
   description?: string;
   /** Hints for clients about where this emulator usually keeps saves. */
-  defaultPaths?: { android?: string[]; windows?: string[] };
+  defaultPaths?: { android?: string[]; windows?: string[]; macos?: string[]; linux?: string[] };
   saves: SaveRule[];
 }
 

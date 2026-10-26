@@ -8,6 +8,8 @@ description: >
   whichever Dolphin is set to use. Wii saves sync per game from the NAND.
 defaultPaths:
   windows: ["%USERPROFILE%\\Documents\\Dolphin Emulator", "%APPDATA%\\Dolphin Emulator"]
+  macos: ["~/Library/Application Support/Dolphin"]
+  linux: ["~/.local/share/dolphin-emu", "~/.var/app/org.DolphinEmu.dolphin-emu/data/dolphin-emu", "~/.dolphin-emu"]
 saves:
   - platforms: ["gc"]
     pattern: "GC/MemoryCard{slot:1}.{region}.raw"

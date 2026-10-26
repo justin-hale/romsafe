@@ -7,6 +7,8 @@ description: >
   DuckStation and the RetroArch PlayStation cores.
 defaultPaths:
   windows: ["%USERPROFILE%\\Documents\\DuckStation\\memcards"]
+  macos: ["~/Library/Application Support/DuckStation/memcards"]
+  linux: ["~/.local/share/duckstation/memcards", "~/.var/app/org.duckstation.DuckStation/data/duckstation/memcards"]
 saves:
   - platforms: ["psx"]
     pattern: "{game}_1.mcd"

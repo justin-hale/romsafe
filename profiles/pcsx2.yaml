@@ -6,6 +6,8 @@ description: >
   same card names on every device. Folder memory cards aren't supported yet.
 defaultPaths:
   windows: ["%USERPROFILE%\\Documents\\PCSX2\\memcards"]
+  macos: ["~/Library/Application Support/PCSX2/memcards"]
+  linux: ["~/.config/PCSX2/memcards", "~/.var/app/net.pcsx2.PCSX2/config/PCSX2/memcards"]
 saves:
   - platforms: ["ps2"]
     pattern: "{card}.ps2"
