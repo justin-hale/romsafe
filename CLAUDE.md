@@ -36,6 +36,16 @@ Clients (JDK 21 and the Android SDK; run from `clients/`):
 Run `npm run typecheck && npm test` before every commit, and the client tests when `clients/`
 changed.
 
+## Releasing
+
+The root `package.json` version is the release version for the server and both apps (the
+clients' Gradle build reads it). To release: bump it (and the `server`/`web` workspace versions to
+match), commit, and push a `vX.Y.Z` tag. `.github/workflows/release.yml` then pushes the image to
+`ghcr.io/justin-hale/romsafe`, and attaches the signed APK and the Windows MSI to a GitHub release.
+It needs the `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and
+`ANDROID_KEY_PASSWORD` repository secrets. An incompatible device API change also bumps the
+protocol ("Versions" in `docs/sync-protocol.md`).
+
 ## Core concepts
 
 - A save is `(platform, game_key, file)`. How the game key is formed depends on the platform's

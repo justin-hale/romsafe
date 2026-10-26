@@ -1,6 +1,10 @@
 services:
   romsafe:
-    build: .
+    # The published image (amd64 and arm64). Pin a version such as :0.1.0 to update on your own
+    # schedule, and update the apps alongside it.
+    image: ghcr.io/justin-hale/romsafe:latest
+    # Or build from this checkout instead:
+    # build: .
     container_name: romsafe
     restart: unless-stopped
     # Match the owner of your ROM/save folders (`id -u`:`id -g` on the host).
@@ -12,7 +16,7 @@ services:
       # Optional: set the admin password here instead of in the first-run screen.
       # ROMSAFE_ADMIN_PASSWORD: change-me
     volumes:
-      # Database, save history and cover art.
+      # Database, save history and cover art. Back this folder up.
       - ./data:/data
       # Your library. In the web GUI, point each platform at folders under
       # these mounts, e.g. ROMs: /library/roms/3ds  Saves: /library/saves/3ds

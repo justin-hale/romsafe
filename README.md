@@ -46,12 +46,16 @@ library and metadata, plus Syncthing-style sync that understands emulators:
 | Windows app | ✅ the same engine as a tray app that syncs when save folders change |
 | macOS and Linux apps | 🛠 the desktop app builds there, but isn't packaged yet |
 
-## Quick start (Docker)
+## Quick start
+
+**Server** (Docker, amd64 or arm64):
 
 ```sh
-git clone <this repo> romsafe && cd romsafe
-# edit docker-compose.yml: the volume paths and the user/uid
-docker compose up -d --build
+mkdir romsafe && cd romsafe
+curl -fsSLO https://raw.githubusercontent.com/justin-hale/romsafe/main/docker-compose.yml
+# edit docker-compose.yml: your ROM and save folders, and the user/uid that owns them
+mkdir -p data && sudo chown 1000:1000 data
+docker compose up -d
 ```
 
 Open `http://<server>:8080` and create an admin password. Then:
@@ -62,33 +66,15 @@ Open `http://<server>:8080` and create an admin password. Then:
 3. **Library → Scrape metadata**: fills in covers and descriptions. Add IGDB/SteamGridDB keys
    under **Settings** for more than libretro box art.
 4. **Devices → Pair a device**: shows a code to enter in the app.
-5. **In the app**: enter the server address and the code, then pick an emulator and its save
-   folder for each platform. The app syncs when it opens, in the background, and from
-   **Sync now**.
 
-### LXC (Proxmox etc.)
+**Apps**: from the [latest release](https://github.com/justin-hale/romsafe/releases/latest),
+`romsafe-<version>.apk` for Android ([Obtainium](https://github.com/ImranR98/Obtainium) keeps it
+updated) and `RomSafe-<version>.msi` for Windows. Enter the server address and the code, then pick
+an emulator and its save folder for each platform. The app syncs when it opens, in the background,
+and from **Sync now**.
 
-Either run Docker inside the container, or run RomSafe directly on Node.js 24:
-
-```sh
-apt install -y git curl && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && apt install -y nodejs
-git clone <this repo> /opt/romsafe && cd /opt/romsafe && npm ci && npm run build
-ROMSAFE_DATA_DIR=/var/lib/romsafe node server/dist/index.js
-```
-
-(Wrap the last line in a systemd unit to start it on boot.)
-
-### Configuration
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `ROMSAFE_PORT` | `8080` | HTTP port |
-| `ROMSAFE_DATA_DIR` | `./data` (`/data` in Docker) | Database, save history blobs, covers |
-| `ROMSAFE_ADMIN_PASSWORD` | unset | Fixed admin password (otherwise set on first run) |
-| `ROMSAFE_PROFILES_DIR` | `./profiles` | Emulator profile YAML files |
-
-Put RomSafe behind a reverse proxy with HTTPS (Caddy, Traefik, Nginx Proxy Manager) if devices
-reach it over the internet. Device tokens are bearer tokens.
+[docs/install.md](docs/install.md) has the details: volumes and permissions, updating, HTTPS,
+the plain Node.js install for an LXC or VM, and configuration variables.
 
 ## How saves are identified
 
@@ -119,7 +105,7 @@ npm run typecheck
 - `server/`: Fastify + TypeScript, SQLite via the built-in `node:sqlite`.
 - `web/`: React + Vite + Tailwind.
 - `profiles/`: emulator profiles.
-- `docs/`: [architecture](docs/architecture.md), [sync protocol](docs/sync-protocol.md), [emulator profiles](docs/emulator-profiles.md).
+- `docs/`: [install](docs/install.md), [architecture](docs/architecture.md), [sync protocol](docs/sync-protocol.md), [emulator profiles](docs/emulator-profiles.md).
 - `clients/`: the Android and Windows apps on a shared Kotlin Multiplatform engine
   ([clients/README.md](clients/README.md)).
 
