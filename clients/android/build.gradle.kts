@@ -10,6 +10,13 @@ val commitCount = providers.exec {
 }.standardOutput.asText.map { it.trim().toIntOrNull() ?: 1 }
 val romsafeVersion = rootProject.extra["romsafeVersion"] as String
 
+// Release signing, from environment variables (CI) or Gradle properties (~/.gradle/gradle.properties
+// on a release machine). Without them the release build comes out unsigned; debug builds always
+// use the SDK's debug key. The keystore itself never lives in the repository.
+fun signingValue(env: String, prop: String): String? =
+    providers.environmentVariable(env).orElse(providers.gradleProperty(prop)).orNull?.takeIf { it.isNotBlank() }
+val releaseKeystore = signingValue("ROMSAFE_KEYSTORE_FILE", "romsafe.keystore.file")
+
 android {
     namespace = "app.romsafe.android"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -22,6 +29,23 @@ android {
         // managers notice updates (Cocoon, for one, caches icons per version).
         versionCode = commitCount.get()
         versionName = romsafeVersion
+    }
+
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = signingValue("ROMSAFE_KEYSTORE_PASSWORD", "romsafe.keystore.password")
+                keyAlias = signingValue("ROMSAFE_KEY_ALIAS", "romsafe.key.alias")
+                keyPassword = signingValue("ROMSAFE_KEY_PASSWORD", "romsafe.key.password")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.findByName("release")
+        }
     }
 
     buildFeatures {

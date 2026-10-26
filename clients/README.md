@@ -78,6 +78,24 @@ adb install -r android/build/outputs/apk/debug/android-debug.apk
 ./gradlew :desktop:run                # the Windows app; :desktop:packageMsi builds an installer
 ```
 
+### Release signing
+
+`:android:assembleRelease` signs with the release key when these are set, as environment
+variables (the release workflow) or as Gradle properties in `~/.gradle/gradle.properties`:
+
+| Environment variable | Gradle property |
+| --- | --- |
+| `ROMSAFE_KEYSTORE_FILE` | `romsafe.keystore.file` |
+| `ROMSAFE_KEYSTORE_PASSWORD` | `romsafe.keystore.password` |
+| `ROMSAFE_KEY_ALIAS` | `romsafe.key.alias` |
+| `ROMSAFE_KEY_PASSWORD` | `romsafe.key.password` |
+
+Without them the release APK comes out unsigned, and debug builds always use the SDK's debug key.
+The keystore stays out of the repository. Android only installs an update signed with the same key
+as the installed app, so a debug build and a release build can't replace each other: switching
+means uninstalling, then pairing again and picking the folders again. Lose the release key and
+every user has to do that, so keep an offline backup.
+
 The server usually runs plain HTTP on the LAN. The app allows cleartext only to hosts that resolve
 to private, loopback or Tailscale (100.64.0.0/10) addresses; anything else needs `https://`.
 `docs/sync-protocol.md` is the API contract.
