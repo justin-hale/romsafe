@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "description": "Self-hosted ROM library and save sync server with Android and Windows clients.",
+  "license": "AGPL-3.0-only",
   "workspaces": [
     "server",
     "web"

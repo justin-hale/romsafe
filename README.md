@@ -117,3 +117,9 @@ npm run typecheck
 - `profiles/`: emulator profiles.
 - `docs/`: [architecture](docs/architecture.md), [sync protocol](docs/sync-protocol.md), [emulator profiles](docs/emulator-profiles.md).
 - `clients/`: plan for the Android and Windows apps.
+
+## License
+
+RomSafe is free software under the [GNU Affero General Public License v3.0](LICENSE). You can use,
+modify and share it; if you run a modified version as a network service, you must make your
+modified source available to its users.
