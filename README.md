@@ -1,4 +1,6 @@
-# 🛡️ RomSafe
+<p align="center"><img src="docs/brand/romsafe-logo.png" alt="RomSafe logo" width="128"></p>
+
+# RomSafe
 
 **Your ROM library and saves, kept safe and in sync on every device.**
 
