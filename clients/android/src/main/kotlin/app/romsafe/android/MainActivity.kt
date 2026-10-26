@@ -63,6 +63,7 @@ import app.romsafe.android.ui.LibraryScreen
 import app.romsafe.android.ui.LibraryViewModel
 import app.romsafe.android.ui.PairScreen
 import app.romsafe.android.ui.PlatformsScreen
+import app.romsafe.android.ui.UpdateScreen
 import app.romsafe.android.ui.theme.RomSafeTheme
 import app.romsafe.android.ui.theme.Stone
 import app.romsafe.shared.api.LibraryRom
@@ -81,8 +82,11 @@ class MainActivity : ComponentActivity() {
                 val vm: AppViewModel = viewModel(factory = AppViewModel.Factory)
                 val state by vm.state.collectAsStateWithLifecycle()
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                    val versionProblem = state.versionProblem
                     if (state.pairing == null) {
                         PairScreen(state, onPair = vm::pair)
+                    } else if (versionProblem != null) {
+                        UpdateScreen(versionProblem, onRetry = vm::refresh)
                     } else {
                         Home(state, vm)
                     }

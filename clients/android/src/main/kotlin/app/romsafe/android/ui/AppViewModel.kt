@@ -21,7 +21,9 @@ import app.romsafe.shared.setup.mergeServerMappings
 import app.romsafe.shared.api.DeviceConfig
 import app.romsafe.shared.api.PlatformInfo
 import app.romsafe.shared.api.RomSafeApi
+import app.romsafe.shared.api.IncompatibleVersionException
 import app.romsafe.shared.api.RomSafeApiException
+import app.romsafe.shared.api.VersionProblem
 import app.romsafe.shared.api.SaveLayout
 import app.romsafe.shared.api.ServerUrl
 import kotlinx.coroutines.CancellationException
@@ -54,6 +56,8 @@ data class AppState(
     val config: DeviceConfig? = null,
     val loading: Boolean = false,
     val loadError: String? = null,
+    /** The app and server can't work together: the app shows only this until it's fixed. */
+    val versionProblem: VersionProblem? = null,
     val setups: Map<String, PlatformSetup> = emptyMap(),
     /** Folder URI → readable label. */
     val folderLabels: Map<String, String> = emptyMap(),
@@ -150,7 +154,7 @@ class AppViewModel(private val app: RomSafeApp) : ViewModel() {
                 }
                 store.saveSetups(setups)
                 _state.update {
-                    it.copy(config = config, loading = false, setups = setups, granted = granted, folderLabels = labels)
+                    it.copy(config = config, loading = false, setups = setups, granted = granted, folderLabels = labels, versionProblem = null)
                 }
                 checkLayouts()
                 // Sync when the app opens, unless it just did.
@@ -158,6 +162,8 @@ class AppViewModel(private val app: RomSafeApp) : ViewModel() {
                 if (System.currentTimeMillis() - last > 60_000) syncNow()
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: IncompatibleVersionException) {
+                _state.update { it.copy(loading = false, versionProblem = e.problem) }
             } catch (e: RomSafeApiException) {
                 if (e.status == 401) {
                     unpair()

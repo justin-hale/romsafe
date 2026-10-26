@@ -8,7 +8,9 @@ import app.romsafe.desktop.sync.SyncService
 import app.romsafe.shared.api.DeviceConfig
 import app.romsafe.shared.api.PlatformInfo
 import app.romsafe.shared.api.RomSafeApi
+import app.romsafe.shared.api.IncompatibleVersionException
 import app.romsafe.shared.api.RomSafeApiException
+import app.romsafe.shared.api.VersionProblem
 import app.romsafe.shared.api.SaveLayout
 import app.romsafe.shared.api.ServerUrl
 import app.romsafe.shared.library.LibraryModel
@@ -51,6 +53,8 @@ data class AppState(
     val config: DeviceConfig? = null,
     val loading: Boolean = false,
     val loadError: String? = null,
+    /** The app and server can't work together: the window shows only this until it's fixed. */
+    val versionProblem: VersionProblem? = null,
     val setups: Map<String, PlatformSetup> = emptyMap(),
     /** Folder paths that exist right now. */
     val existing: Set<String> = emptySet(),
@@ -151,13 +155,15 @@ class AppModel(private val store: DesktopStore = DesktopStore()) {
                 val config = withContext(Dispatchers.IO) { api().config() }
                 val setups = withContext(Dispatchers.IO) { mergeServerMappings(store.setups(), config, Folders::usable) }
                 store.saveSetups(setups)
-                _state.update { it.copy(config = config, loading = false, setups = setups) }
+                _state.update { it.copy(config = config, loading = false, setups = setups, versionProblem = null) }
                 checkFolders()
                 // Sync when the app opens, unless it just did.
                 val last = sync.status.value.last?.finishedAt ?: 0
                 if (System.currentTimeMillis() - last > 60_000) sync.syncNow()
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: IncompatibleVersionException) {
+                _state.update { it.copy(loading = false, versionProblem = e.problem) }
             } catch (e: RomSafeApiException) {
                 if (e.status == 401) {
                     unpair()

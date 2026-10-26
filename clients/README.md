@@ -21,6 +21,9 @@ clients/
 - `RomDownloader` / `DownloadQueue`: resumable ROM downloads into the mapped ROM folder,
   unpacking multi-file zips.
 - `LibraryModel`: the grouped, sorted, searchable library both apps show.
+- `Compatibility`: the version handshake. The apps send their version, check the server's
+  `protocol` and `minClientVersion`, and show "update the app" or "update the server" on a
+  mismatch ("Versions" in `docs/sync-protocol.md`).
 
 ## Android app
 
@@ -53,6 +56,14 @@ game pages and sync engine come from `shared/`.
   (`WatchService`, limited to the folders a profile can keep saves in).
 - Settings, the hash cache and cached covers live in `%LOCALAPPDATA%\RomSafe`. The device token is
   sealed with DPAPI, so only the same Windows user can read it.
+
+## Versions
+
+The apps take their version name from the root `package.json`, like the server, so a release
+has one version everywhere; `:shared:generateBuildInfo` puts it in `BuildInfo.VERSION`. The
+Android `versionCode` is the commit count, and the Windows installer is
+`<major>.<minor>.<commit count>` (Windows Installer only compares three numbers), so every build
+upgrades the one before.
 
 ## Building
 

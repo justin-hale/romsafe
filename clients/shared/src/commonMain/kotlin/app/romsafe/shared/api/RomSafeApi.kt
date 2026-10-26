@@ -1,5 +1,6 @@
 package app.romsafe.shared.api
 
+import app.romsafe.shared.BuildInfo
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
@@ -9,6 +10,7 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.prepareGet
@@ -27,7 +29,7 @@ import io.ktor.utils.io.ByteReadChannel
 import kotlinx.serialization.json.Json
 
 /** A non-2xx answer from the server, with its `{ error }` message when it sent one. */
-class RomSafeApiException(val status: Int, message: String) : Exception(message)
+open class RomSafeApiException(val status: Int, message: String) : Exception(message)
 
 internal class RomStream(val resumed: Boolean, val length: Long?, val channel: ByteReadChannel)
 
@@ -56,16 +58,32 @@ class RomSafeApi(
         defaultRequest {
             url(this@RomSafeApi.baseUrl + "/")
             token?.let { bearerAuth(it) }
+            header(Compatibility.HEADER, BuildInfo.VERSION)
         }
     }
 
-    suspend fun pair(code: String, name: String, kind: String): PairResponse =
-        client.post("api/device/pair") {
+    /**
+     * Checks the server can work with this app before using up the code, so a
+     * version mismatch shows as one instead of a pairing that fails later.
+     */
+    suspend fun pair(code: String, name: String, kind: String): PairResponse {
+        Compatibility.problem(serverVersion())?.let { throw it }
+        return client.post("api/device/pair") {
             contentType(ContentType.Application.Json)
             setBody(PairRequest(code, name, kind))
         }.ok()
+    }
 
-    suspend fun config(): DeviceConfig = client.get("api/device/config").ok()
+    /** The server's version from `/api/health`, or null for a server from before the handshake. */
+    suspend fun serverVersion(): ServerVersion? {
+        val health = client.get("api/health").ok<Health>()
+        if (health.name != "romsafe") throw RomSafeApiException(404, "That address doesn't look like a RomSafe server.")
+        return Compatibility.fromHealth(health)
+    }
+
+    /** Throws [IncompatibleVersionException] when the app and server can't work together. */
+    suspend fun config(): DeviceConfig =
+        client.get("api/device/config").ok<DeviceConfig>().also { c -> Compatibility.problem(c.server)?.let { throw it } }
 
     suspend fun putMappings(mappings: List<Mapping>) {
         client.put("api/device/mappings") {
@@ -188,6 +206,10 @@ class RomSafeApi(
         if (!status.isSuccess()) {
             val text = runCatching { bodyAsText() }.getOrDefault("")
             val message = runCatching { json.decodeFromString<ErrorBody>(text).error }.getOrNull()
+            // The server turns away apps it no longer supports with 426 Upgrade Required.
+            if (status == HttpStatusCode.UpgradeRequired) {
+                throw IncompatibleVersionException(IncompatibleVersionException.Side.APP, message ?: "Update the app to use this server.")
+            }
             throw RomSafeApiException(status.value, message ?: "Server answered ${status.value} ${status.description}")
         }
         return if (T::class == Unit::class) Unit as T else body()

@@ -11,6 +11,7 @@ val commitCount = providers.exec {
     commandLine("git", "rev-list", "--count", "HEAD")
     isIgnoreExitValue = true
 }.standardOutput.asText.map { it.trim().toIntOrNull() ?: 1 }
+val romsafeVersion = rootProject.extra["romsafeVersion"] as String
 
 kotlin {
     jvmToolchain(21)
@@ -40,8 +41,10 @@ compose.desktop {
             packageName = "RomSafe"
             description = "Save sync and ROM library client for a RomSafe server"
             vendor = "RomSafe"
-            // MSI versions are MAJOR.MINOR.BUILD with BUILD at most 65535: one build per commit.
-            packageVersion = "1.0.${commitCount.get()}"
+            // MSI versions are MAJOR.MINOR.BUILD with BUILD at most 65535, and Windows Installer
+            // ignores anything after that. The release's major.minor plus the commit count keeps
+            // every build an upgrade of the one before. (The app itself shows the release version.)
+            packageVersion = romsafeVersion.split('.').take(2).joinToString(".") + ".${commitCount.get()}"
             modules("java.instrument", "java.management", "java.net.http", "jdk.unsupported")
             windows {
                 menu = true

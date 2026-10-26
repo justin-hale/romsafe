@@ -59,6 +59,8 @@ data class Mapping(
 
 @Serializable
 data class DeviceConfig(
+    /** Missing on servers from before the version handshake. */
+    val server: ServerVersion? = null,
     val device: DeviceInfo,
     val platforms: List<PlatformInfo>,
     val profiles: List<Profile>,

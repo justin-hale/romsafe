@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import app.romsafe.desktop.AppState
 import app.romsafe.desktop.FolderKind
 import app.romsafe.desktop.SaveStatus
+import app.romsafe.shared.BuildInfo
 import app.romsafe.shared.api.PlatformInfo
 import app.romsafe.shared.api.ServerUrl
 import app.romsafe.shared.sync.SyncStatus
@@ -108,6 +109,12 @@ fun PlatformsScreen(
                         menuOpen = false
                         confirmUnpair = true
                     })
+                    // Which versions are talking, for bug reports and update checks.
+                    DropdownMenuItem(
+                        text = { Text(listOfNotNull("App ${BuildInfo.VERSION}", state.config?.server?.let { "server ${it.version}" }).joinToString(" · ")) },
+                        onClick = {},
+                        enabled = false,
+                    )
                 }
             }
         }

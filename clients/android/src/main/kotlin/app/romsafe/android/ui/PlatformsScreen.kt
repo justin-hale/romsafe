@@ -71,6 +71,7 @@ import app.romsafe.android.R
 import app.romsafe.android.ui.theme.Brand
 import app.romsafe.android.ui.theme.Stone
 import app.romsafe.android.ui.theme.Warning
+import app.romsafe.shared.BuildInfo
 import app.romsafe.shared.api.PlatformInfo
 import app.romsafe.shared.api.Profile
 import app.romsafe.shared.api.ServerUrl
@@ -153,6 +154,12 @@ fun PlatformsScreen(
                                 menuOpen = false
                                 onUnpair()
                             })
+                            // Which versions are talking, for bug reports and update checks.
+                            DropdownMenuItem(
+                                text = { Text(listOfNotNull("App ${BuildInfo.VERSION}", state.config?.server?.let { "server ${it.version}" }).joinToString(" · ")) },
+                                onClick = {},
+                                enabled = false,
+                            )
                         }
                     }
                 },

@@ -8,6 +8,7 @@ val commitCount = providers.exec {
     commandLine("git", "rev-list", "--count", "HEAD")
     isIgnoreExitValue = true
 }.standardOutput.asText.map { it.trim().toIntOrNull() ?: 1 }
+val romsafeVersion = rootProject.extra["romsafeVersion"] as String
 
 android {
     namespace = "app.romsafe.android"
@@ -20,7 +21,7 @@ android {
         // A new version code for every commit, so launchers and package
         // managers notice updates (Cocoon, for one, caches icons per version).
         versionCode = commitCount.get()
-        versionName = "0.3.${commitCount.get()}"
+        versionName = romsafeVersion
     }
 
     buildFeatures {

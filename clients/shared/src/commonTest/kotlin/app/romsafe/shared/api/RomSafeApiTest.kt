@@ -29,7 +29,8 @@ class RomSafeApiTest {
             assertEquals("http://nas:8080/api/device/config", req.url.toString())
             assertEquals("Bearer t0k", req.headers[HttpHeaders.Authorization])
             respond(
-                """{"device":{"id":3,"name":"Thor","kind":"android"},
+                """{"server":{"version":"0.1.0","protocol":1,"minClientVersion":"0.1.0"},
+                   "device":{"id":3,"name":"Thor","kind":"android"},
                    "platforms":[{"slug":"3ds","name":"Nintendo 3DS","keyKind":"titleId","romExtensions":[".3ds"],"profiles":["azahar"]}],
                    "profiles":[{"id":"azahar","name":"Azahar","defaultPaths":{"android":["azahar-emu/sdmc"]},
                      "saves":[{"platforms":["3ds"],"pattern":"Nintendo 3DS/{id0}","defaults":{"id0":"0"}}]}],
@@ -107,8 +108,12 @@ class RomSafeApiTest {
 
     @Test
     fun surfacesServerErrors() = runTest {
-        val engine = MockEngine {
-            respond("""{"error":"Pairing code is invalid or expired"}""", HttpStatusCode.Unauthorized, jsonHeaders)
+        val engine = MockEngine { req ->
+            if (req.url.encodedPath == "/api/health") {
+                respond("""{"ok":true,"name":"romsafe","version":"0.1.0","protocol":1,"minClientVersion":"0.1.0"}""", headers = jsonHeaders)
+            } else {
+                respond("""{"error":"Pairing code is invalid or expired"}""", HttpStatusCode.Unauthorized, jsonHeaders)
+            }
         }
         val e = assertFailsWith<RomSafeApiException> { RomSafeApi("http://nas", null, engine).pair("X", "Thor", "android") }
         assertEquals(401, e.status)
