@@ -111,6 +111,8 @@ jobs:
   android:
     needs: [version, server-tests, client-tests]
     runs-on: ubuntu-latest
+    outputs:
+      cert: ${{ steps.verify.outputs.cert }}
     defaults:
       run:
         working-directory: clients
@@ -143,9 +145,12 @@ jobs:
           cp android/build/outputs/apk/release/android-release.apk "$GITHUB_WORKSPACE/dist/romsafe-${{ needs.version.outputs.version }}.apk"
       # Fails on an unsigned or broken APK; the fingerprint is the one to publish for verifying installs.
       - name: Verify the signature
+        id: verify
         run: |
           apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
-          "$apksigner" verify --print-certs "$GITHUB_WORKSPACE"/dist/*.apk | tee /dev/stderr | grep -q "SHA-256 digest"
+          cert=$("$apksigner" verify --print-certs "$GITHUB_WORKSPACE"/dist/*.apk | tee /dev/stderr | sed -n 's/.*certificate SHA-256 digest: //p' | head -1)
+          [ -n "$cert" ] || { echo "::error::The APK isn't signed"; exit 1; }
+          echo "cert=$cert" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
           name: apk
@@ -201,6 +206,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.version.outputs.version }}
+          CERT: ${{ needs.android.outputs.cert }}
         run: |
           prerelease=""
           [[ "$VERSION" == *-* ]] && prerelease="--prerelease"
@@ -209,6 +215,7 @@ jobs:
 
           - **Server**: \`docker pull $IMAGE:$VERSION\` (or \`:latest\`). See [docs/install.md](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/docs/install.md).
           - **Android**: \`romsafe-$VERSION.apk\` below, or add this repository to [Obtainium](https://github.com/ImranR98/Obtainium) for updates.
+            Signing certificate SHA-256 (for Obtainium or [AppVerifier](https://github.com/soupslurpr/AppVerifier)): \`$CERT\`
           - **Windows**: \`RomSafe-$VERSION.msi\` below.
 
           Update the server and the apps together: an app tells you when it and the server are too far apart.

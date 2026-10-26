@@ -60,6 +60,13 @@ LAN, loopback and Tailscale addresses.
 For updates, add `https://github.com/justin-hale/romsafe` to
 [Obtainium](https://github.com/ImranR98/Obtainium); it picks up the APK from each release.
 
+Every release APK is signed with the same key. To check a download, compare its signing
+certificate (Obtainium or [AppVerifier](https://github.com/soupslurpr/AppVerifier) show it) with:
+
+```
+SHA-256: 3c99d0ce8d36f7ea57c95c9856092cb00420458771b2e0227908c02fda5ff31f
+```
+
 Android 11 and later keep apps out of `Android/data/<other app>`. If an emulator keeps its saves
 there, move its data folder to shared storage in the emulator's settings first (Azahar, Dolphin,
 RetroArch, PPSSPP, DuckStation and NetherSX2 all can).
