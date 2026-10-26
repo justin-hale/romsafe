@@ -42,8 +42,9 @@ library and metadata, plus Syncthing-style sync that understands emulators:
 | Server: ROM inventory matching and download queue | ✅ |
 | Web GUI | ✅ library, game pages, saves, platforms, devices, conflicts, settings |
 | Docker image | ✅ |
-| Android app | 🛠 planned: see [clients/README.md](clients/README.md) |
-| Windows app | 🛠 planned, sharing the Android sync engine |
+| Android app | ✅ pairing, per-emulator save folders, background sync, library, ROM downloads |
+| Windows app | ✅ the same engine as a tray app that syncs when save folders change |
+| macOS and Linux apps | 🛠 the desktop app builds there, but isn't packaged yet |
 
 ## Quick start (Docker)
 
@@ -61,6 +62,9 @@ Open `http://<server>:8080` and create an admin password. Then:
 3. **Library → Scrape metadata**: fills in covers and descriptions. Add IGDB/SteamGridDB keys
    under **Settings** for more than libretro box art.
 4. **Devices → Pair a device**: shows a code to enter in the app.
+5. **In the app**: enter the server address and the code, then pick an emulator and its save
+   folder for each platform. The app syncs when it opens, in the background, and from
+   **Sync now**.
 
 ### LXC (Proxmox etc.)
 
@@ -116,7 +120,8 @@ npm run typecheck
 - `web/`: React + Vite + Tailwind.
 - `profiles/`: emulator profiles.
 - `docs/`: [architecture](docs/architecture.md), [sync protocol](docs/sync-protocol.md), [emulator profiles](docs/emulator-profiles.md).
-- `clients/`: plan for the Android and Windows apps.
+- `clients/`: the Android and Windows apps on a shared Kotlin Multiplatform engine
+  ([clients/README.md](clients/README.md)).
 
 ## License
 

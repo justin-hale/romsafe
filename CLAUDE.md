@@ -9,7 +9,9 @@ Android and Windows clients. Read `README.md` and `docs/` first; this file is th
   (`server/src/db.ts`, with migrations in the same file; append new ones, never edit old ones).
 - `web/`: React 19 + Vite + Tailwind 4 admin GUI, served by the server from `web/dist`.
 - `profiles/*.yaml`: emulator save layouts (`docs/emulator-profiles.md`).
-- `clients/`: Android and Windows apps (Kotlin Multiplatform), not built yet (`clients/README.md`).
+- `clients/`: one Gradle build (`clients/README.md`). `shared/` is the Kotlin Multiplatform engine
+  (API client, sync, ROM downloads, library model); `android/` is the Compose app; `desktop/` is
+  the Compose Desktop tray app for Windows.
 - `docs/sync-protocol.md`: the device API contract the clients implement.
 
 ## Commands
@@ -23,7 +25,16 @@ npm run typecheck
 npm run build
 ```
 
-Run `npm run typecheck && npm test` before every commit.
+Clients (JDK 21 and the Android SDK; run from `clients/`):
+
+```sh
+./gradlew :shared:allTests :desktop:test   # engine and desktop tests
+./gradlew :android:assembleDebug           # debug APK, installed with adb install -r
+./gradlew :desktop:run                     # :desktop:packageMsi builds the Windows installer
+```
+
+Run `npm run typecheck && npm test` before every commit, and the client tests when `clients/`
+changed.
 
 ## Core concepts
 
@@ -53,14 +64,16 @@ Run `npm run typecheck && npm test` before every commit.
 
 ## Roadmap
 
-1. Deploy the server to an LXC on Proxmox, point it at the real ROM/save folders, then scan and
-   check what matches (fix scanner or profile gaps against real data).
-2. Android app (`clients/android` + `clients/shared`): pairing, per-platform profile and folder
-   pickers (SAF), ROM inventory, the save sync loop, the ROM download queue, background WorkManager
-   sync. Test on the Thor against the real server.
-3. Windows app (`clients/desktop`, Compose Desktop) on the same shared engine, with a tray icon
-   and file watching.
-4. More profiles and formats as real setups need them (see "Known gaps" in
+Done: the server runs on the owner's Proxmox LXC against their real library; the Android app
+and the Windows app pair, sync saves, browse the library and download ROMs.
+
+1. First public release (v0.1.0): Docker image on GHCR, signed APK and Windows installer on
+   GitHub Releases.
+2. A Proxmox community helper script, then platform templates (Unraid, TrueNAS and the like).
+3. Library management from the apps (restore versions, upload saves, covers), behind a per-device
+   permission.
+4. macOS and Linux desktop packages.
+5. More profiles and formats as real setups need them (see "Known gaps" in
    `docs/emulator-profiles.md`).
 
 ## Conventions

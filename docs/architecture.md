@@ -6,8 +6,9 @@
 | --- | --- | --- |
 | Server | Node 24, Fastify, `node:sqlite` | Source of truth: library, save store, sync decisions |
 | Web GUI | React, Vite, Tailwind | Admin UI, served by the server |
-| Android app | Kotlin, Compose (planned) | Picks folders through the Storage Access Framework, runs background sync |
-| Windows app | Kotlin/Compose Desktop (planned) | Same sync engine, as a tray app |
+| Shared engine | Kotlin Multiplatform, Ktor | API client, save sync, ROM downloads, library model (`clients/shared`) |
+| Android app | Kotlin, Jetpack Compose | Picks folders through the Storage Access Framework, syncs with WorkManager |
+| Windows app | Kotlin, Compose Desktop | Same engine as a tray app, syncing when watched save folders change |
 
 The design is **hub and spoke**, not peer to peer. Devices only talk to the server, and the server
 decides what each device should upload or download. This keeps clients thin and gives one place for
@@ -68,5 +69,6 @@ place them and (for ROM-keyed platforms) the device has that game's ROM.
   app opens, and from a "Sync now" button or tile.
 - **Emulators holding saves in memory.** Skip files modified in the last few seconds, and
   optionally sync when the emulator goes to the background (usage-stats permission).
-- **Format differences.** Most battery saves are byte-identical across emulators. Converters (for
-  example DeSmuME `.dsv` footers) are a future profile feature.
+- **Format differences.** Most battery saves are byte-identical across emulators. Where they
+  aren't, a profile rule names a `format` (for example DraStic's `.dsv` footer) and the server
+  converts on the way in and out (`docs/emulator-profiles.md`).
